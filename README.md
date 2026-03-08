@@ -35,6 +35,9 @@ set before attempting a progression so the library can confirm that every datapo
 available i.e. it is recommended to decouple data state from process state so that data is always collected but the
 progression is decided upon if enough data is available to act.
 
+Caution: As the library channel writes are blocking, it is recommended for production use to have a fan-in pattern setup
+where each 'Try' response is then routed to a unified buffered channel in a non-blocking manor.
+
 ## Quickstart
 
 ```go
@@ -69,7 +72,7 @@ o.For("article").Add(&sst.Stage{
     },
 })
 
-// define listener, if used in server, just define once and pass response channel to every 'Try'
+// define listener
 response := make(chan sst.Gate)
 go func() {
     for {
@@ -85,7 +88,7 @@ success := o.Try(entityToCheck, "to_stage", response)
 // success is bool, indicating if the move, considering the current data state is successful
 ```
 
-see `/demo` directory for extended example and how to use. 
+see `/demo` directory for extended example and how to use.
 
 ## License
 
