@@ -36,7 +36,7 @@ available i.e. it is recommended to decouple data state from process state so th
 progression is decided upon if enough data is available to act.
 
 Caution: As the library channel writes are blocking, it is recommended for production use to have a fan-in pattern setup
-where each 'Try' response is then routed to a unified buffered channel in a non-blocking manor.
+where each 'Try' response is then routed to a unified buffered channel in a non-blocking manner.
 
 ## Quickstart
 
