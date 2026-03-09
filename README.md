@@ -1,17 +1,19 @@
 # go-sst
-> Solid-state transitions for entities, with recursive component gates
+> Solid-state flow analysis for hierarchical entities
 
 ## Introduction
 
-This library provides a (solid-)state machine for linear processes in a hierarchical entity structure i.e. it gates the
+This library provides a solid-state linear flow analysis of processes in a hierarchical entity structure i.e. it gates the
 linear progression of an entity by property checks and recursive checks on sub-entities. It is quite useful for the
 validation and processes where the progression of the 'parent' entity not solely depends on its own internal state
 but also on child states, for instance: how many sub-entities of type x are already in stage y; 
 
-It can be used for instance within implementations for e-commerce where the progression of an order, not only depends on
-the order itself (e.g. payment received) but also on the articles of that order (e.g. are all articles stock reserved).
+It can be used for any process where the state progression of entities is determined by hierarchical guidelines: for
+instance ecommerce, manufacturing, system state verification and so on. A good example is the flow of an order, where
+the progression into 'done' is not only determined based on the internal state of the order (e.g. payment received) but
+also on the articles of that order (e.g. are all articles stock reserved).
 
-It communicates passes or blocks of state progression, with full reason explanation, on a go channel which is user
+It communicates passes any blocks of state progression, with full reason explanation, on a go channel which is user
 defined. Implementing an execution runner based on the responses should be trivial, as the communication is verbose
 enough for automatic processing.
 
@@ -26,17 +28,14 @@ type Entity interface {
 	Components(kind string) []Entity // returns all "components" of the entity; it is required that kind="" returns all components regardless of kind
 
 	HasProperty(name string) bool // returns true if a property is available in the state of the entity
-	Property(name string) any // returns the value of the property in the state of the entity
+	Property(name string) any // returns the value of the property in the state of the entity; note that used values must be Go comparable types
 }
 ```
 
 It shall be noted that the library aims for linear progression correctness, the datapoints on which it relies must be
-set before attempting a progression so the library can confirm that every datapoint necessary to move an entity is
+set before attempting a progression so the library can confirm that every datapoint necessary to move any entity is
 available i.e. it is recommended to decouple data state from process state so that data is always collected but the
 progression is decided upon if enough data is available to act.
-
-Caution: As the library channel writes are blocking, it is recommended for production use to have a fan-in pattern setup
-where each 'Try' response is then routed to a unified buffered channel in a non-blocking manner.
 
 ## Quickstart
 

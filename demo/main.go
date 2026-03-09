@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -129,7 +130,7 @@ func main() {
 	}()
 
 	done := make(chan bool)
-	success := o.Try(order, "done", response) // attempt to move order to 'done'
-	fmt.Println(success)                      // should output false, because the article can move, but the order can't
-	<-done                                    // just block for the demo
+	success := o.Try(context.TODO(), order, "done", response) // attempt to move order to 'done'
+	fmt.Println(success)                                      // should output false, because the article can move, but the order can't
+	<-done                                                    // just block for the demo
 }

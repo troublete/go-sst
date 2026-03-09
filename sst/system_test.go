@@ -1,6 +1,7 @@
 package sst
 
 import (
+	"context"
 	"sync"
 	"testing"
 	"time"
@@ -117,7 +118,7 @@ func TestSST(t *testing.T) {
 
 		response := make(chan Gate)
 		done, gp := testListener(response, 1)
-		success := orch.Try(ord, "Created", response)
+		success := orch.Try(context.Background(), ord, "Created", response)
 		<-done
 		gates := *gp
 
@@ -140,7 +141,7 @@ func TestSST(t *testing.T) {
 
 		response := make(chan Gate)
 		done, gp := testListener(response, 1)
-		success := orch.Try(ord, "Booked", response)
+		success := orch.Try(context.Background(), ord, "Booked", response)
 		<-done
 		gates := *gp
 
@@ -164,7 +165,7 @@ func TestSST(t *testing.T) {
 
 		response := make(chan Gate)
 		done, gp := testListener(response, 1)
-		success := orch.Try(ord, "Booked", response)
+		success := orch.Try(context.Background(), ord, "Booked", response)
 		<-done
 		gates := *gp
 
@@ -188,7 +189,7 @@ func TestSST(t *testing.T) {
 
 		response := make(chan Gate)
 		done, gp := testListener(response, 2)
-		success := orch.Try(ord, "Booked", response)
+		success := orch.Try(context.Background(), ord, "Booked", response)
 		<-done
 		gates := *gp
 
@@ -227,7 +228,7 @@ func TestSST(t *testing.T) {
 
 		response := make(chan Gate)
 		done, gp := testListener(response, 2)
-		success := orch.Try(ord, "Booked", response)
+		success := orch.Try(context.Background(), ord, "Booked", response)
 		<-done
 		gates := *gp
 
@@ -273,7 +274,7 @@ func TestSST(t *testing.T) {
 
 		response := make(chan Gate)
 		done, gp := testListener(response, 1)
-		success := o.Try(ord, "Booked", response)
+		success := o.Try(context.Background(), ord, "Booked", response)
 		<-done
 		gates := *gp
 
@@ -296,7 +297,7 @@ func TestSST(t *testing.T) {
 
 		response = make(chan Gate)
 		done, gp = testListener(response, 1)
-		success = o.Try(ordF, "Booked", response)
+		success = o.Try(context.Background(), ordF, "Booked", response)
 		<-done
 		gates = *gp
 
@@ -338,7 +339,7 @@ func TestSST(t *testing.T) {
 
 		response := make(chan Gate)
 		done, gp := testListener(response, 1)
-		success := o.Try(ord, "Booked", response)
+		success := o.Try(context.Background(), ord, "Booked", response)
 		<-done
 		gates := *gp
 
@@ -362,7 +363,7 @@ func TestSST(t *testing.T) {
 
 		response := make(chan Gate)
 		done, gp := testListener(response, 1)
-		success := o.Try(NewTestEntity("ord-1", "order", "created"), "Booked", response)
+		success := o.Try(context.Background(), NewTestEntity("ord-1", "order", "created"), "Booked", response)
 		<-done
 		gates := *gp
 
@@ -386,7 +387,7 @@ func TestSST(t *testing.T) {
 		o.For("order")
 		response := make(chan Gate)
 		done, gp := testListener(response, 1)
-		success := o.Try(NewTestEntity("ord-1", "order", "created"), "Booked", response)
+		success := o.Try(context.Background(), NewTestEntity("ord-1", "order", "created"), "Booked", response)
 		<-done
 		gates := *gp
 
@@ -412,7 +413,7 @@ func TestSST(t *testing.T) {
 		})
 		response := make(chan Gate)
 		done, gp := testListener(response, 1)
-		success := o.Try(NewTestEntity("ord-1", "order", "created"), "Booked", response)
+		success := o.Try(context.Background(), NewTestEntity("ord-1", "order", "created"), "Booked", response)
 		<-done
 		gates := *gp
 
@@ -441,7 +442,7 @@ func TestSST(t *testing.T) {
 
 		response := make(chan Gate)
 		done, gp := testListener(response, 1)
-		success := o.Try(NewTestEntity("ord-1", "order", "booked"), "created", response)
+		success := o.Try(context.Background(), NewTestEntity("ord-1", "order", "booked"), "created", response)
 		<-done
 		gates := *gp
 
@@ -491,7 +492,7 @@ func TestSST(t *testing.T) {
 
 		response := make(chan Gate)
 		done, gp := testListener(response, 3)
-		success := o.Try(NewTestEntity("ord-1", "order", "created",
+		success := o.Try(context.Background(), NewTestEntity("ord-1", "order", "created",
 			f,
 			NewTestEntity("ful-2", "fulfilment", "not-allocated"),
 		), "booked",
@@ -559,7 +560,7 @@ func TestSST(t *testing.T) {
 
 		response := make(chan Gate)
 		done, gp := testListener(response, 2)
-		success := o.Try(NewTestEntity("ord-1", "order", "created",
+		success := o.Try(context.Background(), NewTestEntity("ord-1", "order", "created",
 			f,
 			NewTestEntity("comp-1", "component", "not-allocated"),
 		), "booked",
