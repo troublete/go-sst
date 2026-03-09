@@ -224,7 +224,7 @@ func (o Orchestration) Try(ctx context.Context, e Entity, ms string, response ch
 
 	success := true
 	cmp := func(a, b any) bool {
-		defer func() { recover() }()
+		defer func() { recover() }() // this is just a guard in case the readme was glanced over regarding comparable types
 		return a == b
 	}
 

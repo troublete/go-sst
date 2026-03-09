@@ -78,7 +78,6 @@ go func() {
         select{
         case r := <-response
             // do something with the gate response, i.e. update data, trigger work, ...
-        default:
         }
     }
 }()

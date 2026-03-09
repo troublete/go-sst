@@ -124,13 +124,10 @@ func main() {
 
 				// ... do something with the event;
 				fmt.Println(r)
-			default:
 			}
 		}
 	}()
 
-	done := make(chan bool)
 	success := o.Try(context.TODO(), order, "done", response) // attempt to move order to 'done'
 	fmt.Println(success)                                      // should output false, because the article can move, but the order can't
-	<-done                                                    // just block for the demo
 }
