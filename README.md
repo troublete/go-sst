@@ -1,21 +1,23 @@
 # go-sst
-> Solid-state flow analysis for hierarchical entities
+> State flow analysis of hierarchical entity structures
 
 ## Introduction
 
-This library provides a solid-state linear flow analysis of processes in a hierarchical entity structure i.e. it gates the
-linear progression of an entity by property checks and recursive checks on sub-entities. It is quite useful for the
-validation and processes where the progression of the 'parent' entity not solely depends on its own internal state
-but also on child states, for instance: how many sub-entities of type x are already in stage y; 
+This library provides a solid-state like linear flow analysis of processes in a hierarchical entity structure i.e. it
+gates the linear progression of an entity by property checks and checks on sub-entities i.e. components. It is quite
+useful for the validation and processes where the progression of the 'parent' entity not solely depends on its own
+internal state but also on 'child' states, for instance: how many sub-entities of type x are already in stage y;
 
-It can be used for any process where the state progression of entities is determined by hierarchical guidelines: for
-instance ecommerce, manufacturing, system state verification and so on. A good example is the flow of an order, where
-the progression into 'done' is not only determined based on the internal state of the order (e.g. payment received) but
-also on the articles of that order (e.g. are all articles stock reserved).
+It can be used for any process where the state progression of entities can be linearly defined: for instance ecommerce,
+manufacturing, system state verification and so on. A good example is the flow of an order, where the progression into '
+done' is not only determined based on the internal state of the order (e.g. payment received) but also on the articles
+of that order (e.g. are all articles stock reserved).
 
-It communicates passes any blocks of state progression, with full reason explanation, on a go channel which is user
-defined. Implementing an execution runner based on the responses should be trivial, as the communication is verbose
-enough for automatic processing.
+Any evaluation on the defined orchestration (should be defined on bootup and evaluations run on runtime) returns a
+boolean value if the whole transition proposed would work and and a list containing all messages declaring what happened
+along the way e.g. if a article of an order could progress it will be output even if the overall process would fail
+according to the validation. In the following the output messages can be used as orchestration of state updates on the
+actual entities.
 
 The library is build around a generic interface which is defined as seen below.
 
@@ -25,10 +27,8 @@ type Entity interface {
 	Kind() string // this is required to map the entity, to a sequence within the defined orchestration
 	Stage() string // this must return the current stage of the entity on the sequence in the orchestration
 
-	Components(kind string) []Entity // returns all "components" of the entity; it is required that kind="" returns all components regardless of kind
-
-	HasProperty(name string) bool // returns true if a property is available in the state of the entity
-	Property(name string) any // returns the value of the property in the state of the entity; note that used values must be Go comparable types
+	Properties() map[string]string // all properties of the entities, we limit here to string to make the validation predictable
+	Components() []Entity // all components entities of the 'parent'
 }
 ```
 
@@ -36,57 +36,6 @@ It shall be noted that the library aims for linear progression correctness, the 
 set before attempting a progression so the library can confirm that every datapoint necessary to move any entity is
 available i.e. it is recommended to decouple data state from process state so that data is always collected but the
 progression is decided upon if enough data is available to act.
-
-## Quickstart
-
-```go
-// orchestration defined once in code; every kind has it own linear flow (sequence) of stages
-o := sst.Orchestration{}
-
-// orders can go from in_progress -> done, if property 'paymentReceived' is set and all articles are delivered
-o.For("order").Add(&sst.Stage{
-    Name: "in_progress",
-}).Add(&sst.Stage{
-    Name: "done",
-    PropertyGate: map[string]any{
-        "paymentReceived": sst.Any(),
-    },
-    ComponentGate: []*sst.ComponentGate{
-        {
-            Kind:      "articles", // filter by kind, if empty all components are considered
-            StageName: "delivered",
-            N:         -1, // all
-            Min:       1,  // requires at least one
-        },
-    },
-})
-
-// articles can go from shipped -> delivered, if 'deliveredAt' is set
-o.For("article").Add(&sst.Stage{
-    Name: "shipped",
-}).Add(&sst.Stage{
-    Name: "delivered",
-    PropertyGate: map[string]any{
-        "deliveredAt": sst.Any(),
-    },
-})
-
-// define listener
-response := make(chan sst.Gate)
-go func() {
-    for {
-        select{
-        case r := <-response
-            // do something with the gate response, i.e. update data, trigger work, ...
-        }
-    }
-}()
-
-success := o.Try(entityToCheck, "to_stage", response) 
-// success is bool, indicating if the move, considering the current data state is successful
-```
-
-see `/demo` directory for extended example and how to use.
 
 ## License
 
