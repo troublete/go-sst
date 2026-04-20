@@ -11,12 +11,13 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: setup go
-      uses: actions/setup-go@v4
-      with:
-        check-latest: true
+      - name: setup go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 'stable'
+          check-latest: true
 
-    - name: test
-      run: go test -v ./...
+      - name: test
+        run: go test -v ./...
