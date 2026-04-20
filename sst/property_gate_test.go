@@ -13,7 +13,7 @@ func TestPropertyGates(t *testing.T) {
 			pgd      *PropertyGateDefinition
 			in       map[string]string
 			out      bool
-			messages []string
+			messages []*Message
 		}{
 			{
 				pgd: NewPropertyGate(map[string]string{
@@ -32,8 +32,13 @@ func TestPropertyGates(t *testing.T) {
 					"a": "c",
 				},
 				out: false,
-				messages: []string{
-					RequiredPropertyNoMatch + "," + "key=a" + ",",
+				messages: []*Message{
+					{
+						Content: RequiredPropertyNoMatch,
+						Context: map[string]string{
+							"key": "a",
+						},
+					},
 				},
 			},
 			{
@@ -45,8 +50,13 @@ func TestPropertyGates(t *testing.T) {
 					"a": "b",
 				},
 				out: false,
-				messages: []string{
-					RequiredPropertyMissing + "," + "key=c" + ",",
+				messages: []*Message{
+					{
+						Content: RequiredPropertyMissing,
+						Context: map[string]string{
+							"key": "c",
+						},
+					},
 				},
 			},
 			{
@@ -72,7 +82,7 @@ func TestPropertyGates(t *testing.T) {
 			},
 		} {
 			t.Run(fmt.Sprintf("%#v", tc), func(t *testing.T) {
-				got, messages := tc.pgd.Evaluate(tc.in, "")
+				got, messages := tc.pgd.Evaluate(tc.in, "", "")
 				if got != tc.out || !reflect.DeepEqual(messages, tc.messages) {
 					t.Errorf("failed, expected %v, got %v", got, tc.out)
 				}

@@ -53,13 +53,13 @@ func TestComponentGate(t *testing.T) {
 		cg := NewComponentGate("order", []string{"correct"}, "", 1, 1)
 		bc := cg.BufferedComponent()
 
-		pass, issues := bc.Evaluate("")
-		if pass || len(issues) < 1 || issues[0] != ComponentGateCountTooLow+",component_kind=order," {
+		pass, issues := bc.Evaluate("", "")
+		if pass || len(issues) < 1 || issues[0].Content != ComponentGateCountTooLow || issues[0].Context["component_kind"] != "order" {
 			t.Error("expected to fail evaluate")
 		}
 
 		bc.Input("order", "correct")
-		pass, issues = bc.Evaluate("")
+		pass, issues = bc.Evaluate("", "")
 		if !pass || len(issues) > 0 {
 			t.Error("expected to pass evaluate")
 		}
@@ -72,13 +72,13 @@ func TestComponentGate(t *testing.T) {
 		bc.Input("fulfilment", "wrong") // skip not matching
 
 		bc.Input("order", "wrong")
-		pass, issues := bc.Evaluate("")
-		if pass || len(issues) < 1 || issues[0] != ComponentGateCountNoMatch+",component_kind=order," {
+		pass, issues := bc.Evaluate("", "")
+		if pass || len(issues) < 1 || issues[0].Content != ComponentGateCountNoMatch || issues[0].Context["component_kind"] != "order" {
 			t.Error("expected to fail evaluate")
 		}
 
 		bc.Input("order", "correct")
-		pass, issues = bc.Evaluate("")
+		pass, issues = bc.Evaluate("", "")
 		if !pass || len(issues) > 0 {
 			t.Error("expected to pass evaluate")
 		}

@@ -86,13 +86,31 @@ func (cg *ComponentGate) LogicGate() string {
 	return cg.cgd.logicGate
 }
 
-func (cg *ComponentGate) Evaluate(postfix string) (bool, []string) {
+func (cg *ComponentGate) Evaluate(kind, id string) (bool, []*Message) {
 	if cg.matchN+cg.noMatchN < cg.cgd.min {
-		return false, []string{ComponentGateCountTooLow + ",component_kind=" + cg.cgd.kind + "," + postfix}
+		return false, []*Message{
+			{
+				Content: ComponentGateCountTooLow,
+				ID:      id,
+				Kind:    kind,
+				Context: map[string]string{
+					"component_kind": cg.cgd.kind,
+				},
+			},
+		}
 	}
 
 	if cg.matchN < cg.cgd.n {
-		return false, []string{ComponentGateCountNoMatch + ",component_kind=" + cg.cgd.kind + "," + postfix}
+		return false, []*Message{
+			{
+				Content: ComponentGateCountNoMatch,
+				ID:      id,
+				Kind:    kind,
+				Context: map[string]string{
+					"component_kind": cg.cgd.kind,
+				},
+			},
+		}
 	}
 
 	return true, nil

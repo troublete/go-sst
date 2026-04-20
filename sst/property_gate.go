@@ -30,8 +30,8 @@ func NewPropertyGate(in map[string]string, logicGate ...string) *PropertyGateDef
 	}
 }
 
-func (pgd *PropertyGateDefinition) Evaluate(on map[string]string, postfix string) (bool, []string) {
-	var issues []string
+func (pgd *PropertyGateDefinition) Evaluate(on map[string]string, kind, id string) (bool, []*Message) {
+	var issues []*Message
 
 	// we serialized keys to slice on creation, so now we use this to use maps strength, lookup to check for values
 	for idx, k := range pgd.keys {
@@ -39,9 +39,23 @@ func (pgd *PropertyGateDefinition) Evaluate(on map[string]string, postfix string
 		// not match, we fail
 		if onV, ok := on[k]; !ok || (onV != pgd.values[idx] && pgd.values[idx] != "") {
 			if !ok {
-				issues = append(issues, RequiredPropertyMissing+",key="+k+","+postfix)
+				issues = append(issues, &Message{
+					Content: RequiredPropertyMissing,
+					ID:      id,
+					Kind:    kind,
+					Context: map[string]string{
+						"key": k,
+					},
+				})
 			} else {
-				issues = append(issues, RequiredPropertyNoMatch+",key="+k+","+postfix)
+				issues = append(issues, &Message{
+					Content: RequiredPropertyNoMatch,
+					ID:      id,
+					Kind:    kind,
+					Context: map[string]string{
+						"key": k,
+					},
+				})
 			}
 		}
 	}

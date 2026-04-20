@@ -1,7 +1,6 @@
 package sst
 
 import (
-	"strings"
 	"testing"
 	"time"
 )
@@ -340,7 +339,7 @@ func TestOrchestration(t *testing.T) {
 			kind: "not-registered",
 		}, "to-state")
 
-		if success != false || len(messages) != 1 || !strings.Contains(messages[0], SequenceNoMatch) {
+		if success != false || len(messages) != 1 || messages[0].Content != SequenceNoMatch {
 			t.Error("expected to fail")
 		}
 	})
@@ -353,7 +352,7 @@ func TestOrchestration(t *testing.T) {
 			stage: "from-state",
 		}, "to-state")
 
-		if success != false || len(messages) != 1 || !strings.Contains(messages[0], SequenceStageNoMatch) || !strings.Contains(messages[0], "stage") {
+		if success != false || len(messages) != 1 || messages[0].Content != SequenceStageNoMatch || messages[0].Context["stage"] != "from-state" {
 			t.Error("expected to fail")
 		}
 	})
@@ -368,7 +367,7 @@ func TestOrchestration(t *testing.T) {
 			stage: "from-state",
 		}, "to-state")
 
-		if success != false || len(messages) != 1 || !strings.Contains(messages[0], SequenceStageNoMatch) || !strings.Contains(messages[0], "milestone") {
+		if success != false || len(messages) != 1 || messages[0].Content != SequenceStageNoMatch || messages[0].Context["milestone"] != "to-state" {
 			t.Error("expected to fail")
 		}
 	})
@@ -400,7 +399,7 @@ func TestOrchestration(t *testing.T) {
 			stage: "a",
 		}, "b")
 
-		if success || len(messages) != 1 || !strings.Contains(messages[0], SequenceMilestoneNotReached) {
+		if success || len(messages) != 1 || messages[0].Content != SequenceMilestoneNotReached {
 			t.Error("expected to flag invalid sequence structure")
 		}
 	})

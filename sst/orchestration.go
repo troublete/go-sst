@@ -55,25 +55,49 @@ func (o *Orchestration) SequenceFor(kind string) *Sequence {
 	return s
 }
 
-func (o *Orchestration) ValidateTransition(e Entity, milestoneStage string) (bool, []string) {
+func (o *Orchestration) ValidateTransition(e Entity, milestoneStage string) (bool, []*Message) {
 	var seq *Sequence
 	var ok bool
 	if seq, ok = o.sequences[e.Kind()]; !ok {
-		return false, []string{SequenceNoMatch + ",kind=" + e.Kind() + ",id=" + e.ID()}
+		return false, []*Message{
+			{
+				Content: SequenceNoMatch,
+				ID:      e.ID(),
+				Kind:    e.Kind(),
+			},
+		}
 	}
 
 	var stage *Stage
 	if stage, ok = seq.stages[e.Stage()]; !ok {
-		return false, []string{SequenceStageNoMatch + ",kind=" + e.Kind() + ",id=" + e.ID() + ",stage=" + e.Stage()}
+		return false, []*Message{
+			{
+				Content: SequenceStageNoMatch,
+				ID:      e.ID(),
+				Kind:    e.Kind(),
+				Context: map[string]string{
+					"stage": e.Stage(),
+				},
+			},
+		}
 	}
 
 	var milestone *Stage
 	if milestone, ok = seq.stages[milestoneStage]; !ok {
-		return false, []string{SequenceStageNoMatch + ",kind=" + e.Kind() + ",id=" + e.ID() + ",milestone=" + milestoneStage}
+		return false, []*Message{
+			{
+				Content: SequenceStageNoMatch,
+				ID:      e.ID(),
+				Kind:    e.Kind(),
+				Context: map[string]string{
+					"milestone": milestoneStage,
+				},
+			},
+		}
 	}
 
 	success := true
-	var messages []string
+	var messages []*Message
 
 	for stage != milestone {
 		next := stage.next
@@ -92,7 +116,7 @@ func (o *Orchestration) ValidateTransition(e Entity, milestoneStage string) (boo
 		}
 
 		for _, pg := range next.PropertyGates {
-			pass, issues := pg.Evaluate(e.Properties(), "kind="+e.Kind()+",id="+e.ID())
+			pass, issues := pg.Evaluate(e.Properties(), e.Kind(), e.ID())
 			messages = append(messages, issues...) // we always record all messages, as it is not responsibility to handle them; just to record
 
 			// either it is reference on a logic gate, then we defer the flagging of issues
@@ -111,15 +135,11 @@ func (o *Orchestration) ValidateTransition(e Entity, milestoneStage string) (boo
 
 		for _, cg := range next.ComponentGates {
 			/**
-			todo: validate if this approach to allow "auto" preferred stage is actually satisfactory;
-			todo: also here the stage selection currently is wrong; it must be filtered to the respective gate requirement
-			s := o.SequenceFor(cg.kind)
-			sort.Slice(s.stageSlice, func(i, j int) bool {
-				return s.stageSlice[i].position < s.stageSlice[j].position
-			})
-			if cg.preferredStage == "" {
-				cg.preferredStage = s.stageSlice[0].Name
-			}
+			note:
+			as of now the preferred stage must be defined by the user, i.e. the stage that the system tries to
+			transition an entity to. Though there is an implication that the system can determine the stage, as either
+			the furthest or earliest possible one from the list provided and therefore could auto-pick the preferred
+			stage. This might be a future long hanging fruit to simplify the interface.
 			*/
 			bc := cg.BufferedComponent()
 			for _, c := range e.Components() {
@@ -143,7 +163,7 @@ func (o *Orchestration) ValidateTransition(e Entity, milestoneStage string) (boo
 				bc.Input(c.Kind(), componentStage)
 			}
 
-			pass, issues := bc.Evaluate("kind=" + e.Kind() + ",id=" + e.ID())
+			pass, issues := bc.Evaluate(e.Kind(), e.ID())
 			messages = append(messages, issues...)
 
 			// either it is reference on a logic gate, then we defer the flagging of issues
@@ -162,16 +182,40 @@ func (o *Orchestration) ValidateTransition(e Entity, milestoneStage string) (boo
 
 		for _, g := range logicGates {
 			if !g.Evaluate() {
-				messages = append(messages, LogicGateDidNotPass+",kind="+e.Kind()+",id="+e.ID()+",gate="+g.Name()+",milestone="+next.Name)
+				messages = append(messages, &Message{
+					Content: LogicGateDidNotPass,
+					ID:      e.ID(),
+					Kind:    e.Kind(),
+					Context: map[string]string{
+						"gate":      g.Name(),
+						"milestone": next.Name,
+					},
+				})
 				succeedsStage = false
 				success = false
 			}
 		}
 
 		if succeedsStage {
-			messages = append(messages, StageGatesPassed+",kind="+e.Kind()+",id="+e.ID()+",from_stage="+stage.Name+",to_stage="+next.Name)
+			messages = append(messages, &Message{
+				Content: StageGatesPassed,
+				ID:      e.ID(),
+				Kind:    e.Kind(),
+				Context: map[string]string{
+					"from_stage": stage.Name,
+					"to_stage":   next.Name,
+				},
+			})
 		} else {
-			messages = append(messages, StageGatesNotPassing+",kind="+e.Kind()+",id="+e.ID()+",from_stage="+stage.Name+",to_stage="+next.Name)
+			messages = append(messages, &Message{
+				Content: StageGatesNotPassing,
+				ID:      e.ID(),
+				Kind:    e.Kind(),
+				Context: map[string]string{
+					"from_stage": stage.Name,
+					"to_stage":   next.Name,
+				},
+			})
 		}
 
 		stage = next
@@ -179,7 +223,14 @@ func (o *Orchestration) ValidateTransition(e Entity, milestoneStage string) (boo
 
 	if stage != milestone {
 		success = false
-		messages = append(messages, SequenceMilestoneNotReached+",milestone="+milestoneStage)
+		messages = append(messages, &Message{
+			Content: SequenceMilestoneNotReached,
+			ID:      e.ID(),
+			Kind:    e.Kind(),
+			Context: map[string]string{
+				"milestone": milestoneStage,
+			},
+		})
 	}
 
 	return success, messages
