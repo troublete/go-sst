@@ -1,6 +1,8 @@
 # go-sst
 > State flow analysis of hierarchical entity structures
 
+[![test](https://github.com/troublete/go-sst/actions/workflows/test.yml/badge.svg)](https://github.com/troublete/go-sst/actions/workflows/test.yml)
+
 ## Introduction
 
 In systems where the correct aggregated state is dependent on correct states of all elements within itself and the
