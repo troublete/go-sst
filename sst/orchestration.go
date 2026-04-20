@@ -28,7 +28,7 @@ func (s *Sequence) AddStage(stage *Stage) *Sequence {
 	if len(s.stageSlice) == 0 {
 		stage.position = 1
 	} else {
-		last := s.stageSlice[len(s.stages)-1]
+		last := s.stageSlice[len(s.stageSlice)-1]
 		stage.position = last.position + 1
 		last.next = stage
 	}
